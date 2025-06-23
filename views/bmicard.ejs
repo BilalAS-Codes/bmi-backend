@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>BMI Card</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gradient-to-b from-indigo-100 to-white flex justify-center items-center min-h-screen">
+  <div class="max-w-sm w-full bg-white rounded-3xl shadow-xl overflow-hidden">
+    <div class="bg-gradient-to-r from-indigo-500 to-purple-500 p-6 text-white text-center">
+      <div class="w-24 h-24 mx-auto bg-white rounded-full flex items-center justify-center">
+        <img src="<%= student.image_url || 'https://via.placeholder.com/100' %>" alt="Profile" class="rounded-full w-20 h-20 object-cover">
+      </div>
+      <h2 class="text-xl font-bold mt-3"><%= student.name %></h2>
+      <p class="text-sm opacity-80">S/o <%= student.father_name %></p>
+      <p class="text-sm">Student ID: <strong><%= student.student_id %></strong></p>
+    </div>
+
+    <div class="grid grid-cols-3 gap-3 px-4 py-4 bg-gray-50">
+      <div class="glass rounded-xl p-3 w-full text-center shadow-md bg-white border border-gray-200 min-h-[80px] flex flex-col justify-center items-center">
+        <div class="text-xl mb-1">📏</div>
+        <p class="text-xs text-gray-700 font-semibold">Height</p>
+        <p class="text-sm font-bold text-indigo-700"><%= student.height_cm %> cm</p>
+      </div>
+      <div class="glass rounded-xl p-3 w-full text-center shadow-md bg-white border border-gray-200 min-h-[80px] flex flex-col justify-center items-center">
+        <div class="text-xl mb-1">🏋️</div>
+        <p class="text-xs text-gray-700 font-semibold">Weight</p>
+        <p class="text-sm font-bold text-green-700"><%= student.weight_kg %> kg</p>
+      </div>
+      <div class="glass rounded-xl p-3 w-full text-center shadow-md bg-yellow-100 border border-yellow-300 min-h-[80px] flex flex-col justify-center items-center">
+        <div class="text-xl mb-1">⚠️</div>
+        <p class="text-xs text-gray-700 font-semibold">Health</p>
+        <p class="text-[13px] font-bold text-yellow-900 leading-tight break-words"><%= student.health_status %></p>
+      </div>
+    </div>
+
+    <div class="px-4 py-3 text-sm">
+      <p><strong>BMI:</strong> <%= student.bmi %></p>
+      <p><strong>AW Name:</strong> <%= student.aw_name %></p>
+      <p><strong>Address:</strong> <%= student.address %></p>
+    </div>
+
+    <div class="px-4 pb-4 text-xs text-gray-400">
+  📅 Updated on:
+  <%= student.updated_at 
+      ? student.updated_at.toDateString() 
+      : 'N/A' %>
+</div>
+
+  </div>
+</body>
+</html>
