@@ -45,7 +45,7 @@ const app = express();
 app.set('view engine', 'ejs');
 // Specify the directory where your EJS template files are located
 app.set('views', './views');
-const PORT = Number(process.env.APP_PORT) || 5000;
+const PORT = Number(process.env.PORT) || 5000;
 
 app.use(express.json());
 
