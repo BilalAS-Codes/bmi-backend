@@ -41,4 +41,21 @@ router.get("/anganwadi_workers/filter", async (req, res) => {
   }
 });
 
+
+router.get('/get/all', async (req, res) => {
+  const sql = `
+    SELECT *
+      FROM anganwadi_workers
+    ORDER BY id;
+  `;
+
+  try {
+    const { rows } = await pool.query(sql);
+    res.json(rows);
+  } catch (err) {
+    console.error(" Error fetching workers:", err);
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
 module.exports = router;

@@ -14,6 +14,7 @@ const { pool } = require('./connection');
 const jwt = require('jsonwebtoken');
 const cors = require('cors');
 const {rescheduleCronJobs} = require('./routes/reschedule_crone_jobs');  
+const anganwadiRouter = require('./routes/angawadi_workers')
 
 dotenv.config();
 
@@ -53,7 +54,7 @@ const PORT = 5000
 // createTables()
 app.use('/auth', authRoutes);
 app.use('/candidates', candidateRoutes);
-
+app.use('/anganwadi-workers',anganwadiRouter); 
 app.use('/seed',seedUsers)
 
 
