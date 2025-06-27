@@ -28,6 +28,7 @@ const bcrypt = require('bcrypt');
 
 const findByEmail = async (email) => {
   const { rows } = await pool.query('SELECT * FROM anganwadi_workers WHERE email = $1', [email]);
+  console.log("Worker found:", rows);
   return rows[0];
 };
 
