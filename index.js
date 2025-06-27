@@ -13,6 +13,7 @@ const cronRouter = require('./routes/cron_jobs')
 const { pool } = require('./connection'); 
 const jwt = require('jsonwebtoken');
 const cors = require('cors');
+const {rescheduleCronJobs} = require('./routes/reschedule_crone_jobs');  
 
 dotenv.config();
 
@@ -63,6 +64,11 @@ app.use('/task' , taskRoutes);
 app.use('/cron', cronRouter);
 
 app.get('/', (_req, res) => res.send('Anganwadi backend is running'));
+
+
+app.get('/test', (req, res) => {
+  res.json({ message: 'Backend is working' });
+});
 
 
 
@@ -230,5 +236,6 @@ app.post('/api/login', async (req, res) => {
 
 
 connectDB().then(() => {
+  rescheduleCronJobs(); 
   app.listen(PORT, () => console.log(`🚀 Server running on http://localhost:${PORT}`));
 });
