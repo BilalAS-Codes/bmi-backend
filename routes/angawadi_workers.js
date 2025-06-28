@@ -58,4 +58,28 @@ router.get('/get/all', async (req, res) => {
   }
 });
 
+
+router.post('/register', async (req, res) => {
+  const { email , password , full_name , phone} = req.body;
+  const id = 11 
+
+  if (!email || !password || !full_name || !phone ) {
+    return res.status(400).json({ error: "All fields are required" });
+  }
+
+  const query = `
+    INSERT INTO anganwadi_workers (id, email , password_hash, full_name , phone)
+    VALUES ($1, $2, $3, $4 , $5)
+    RETURNING id;
+  `;
+
+  try {
+    const { rows } = await pool.query(query, [id,email , password , full_name , phone]);
+    res.status(201).json({ id: rows[0].id });
+  } catch (err) {
+    console.error("❌ Error registering worker:", err);
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
 module.exports = router;

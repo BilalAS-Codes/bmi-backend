@@ -13,7 +13,6 @@ const { pool } = require('../connection');
  * @access Public (or adjust if authentication is needed for viewing)
  */
 
-// viewRoutes.js
 router.get('/view-student/:workerId/:candidateId', async (req, res) => {
   const { workerId, candidateId } = req.params;
 
@@ -25,15 +24,19 @@ router.get('/view-student/:workerId/:candidateId', async (req, res) => {
           c.mother_name AS mothername,
           c.age,
           c.gender,
-          latest_bmi.height,
-          latest_bmi.weight,
-          latest_bmi.bmi,
-          latest_bmi.health_status,
-          latest_bmi.image AS student_image,
+          COALESCE(latest_bmi.height, c.height) AS height,
+          COALESCE(latest_bmi.weight, c.weight) AS weight,
+          COALESCE(latest_bmi.bmi, 
+              CASE WHEN c.height > 0 AND c.weight > 0 
+                   THEN ROUND(c.weight / ((c.height/100) * (c.height/100)), 1)
+                   ELSE NULL END) AS bmi,
+          COALESCE(latest_bmi.health_status, c.health_status) AS health_status,
+          COALESCE(latest_bmi.image, c.student_image) AS image_url,
           aw.id AS awd_id,
+          aw.full_name AS aw_name,  -- Added worker name
           c.student_id,
           c.address,
-          latest_bmi.created_at AS updated_at
+          COALESCE(latest_bmi.created_at, c.updated_at) AS updated_at
       FROM
           candidates c
       JOIN
@@ -56,7 +59,7 @@ router.get('/view-student/:workerId/:candidateId', async (req, res) => {
       ) AS latest_bmi ON TRUE
       WHERE
           aw.id = $1
-        AND c.student_id = $2;        -- <<< filter by your string ID
+        AND c.id = $2;       
     `;
 
     const result = await pool.query(query, [workerId, candidateId]);
@@ -67,11 +70,17 @@ router.get('/view-student/:workerId/:candidateId', async (req, res) => {
         .send('<h1>Student Not Found</h1><p>The requested student could not be found for this worker.</p>');
     }
 
-    res.render('bmicard', { student: result.rows[0] });
+    // Format the data for the template
+    const studentData = {
+      ...result.rows[0],
+      height_cm: result.rows[0].height,
+      weight_kg: result.rows[0].weight
+    };
+
+    res.render('bmicard', { student: studentData });
   } catch (error) {
     console.error('Error fetching student details for view:', error);
     res.status(500).send('<h1>Internal Server Error</h1>');
   }
 });
-
 module.exports = router;

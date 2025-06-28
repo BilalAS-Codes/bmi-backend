@@ -4,6 +4,7 @@ const express = require('express');
 const { pool } = require('../connection');
 const { app } = require('firebase-admin');
 const router = express.Router();
+const QRCode = require('qrcode');
 
 
 //get worker by id
@@ -30,6 +31,8 @@ router.get('/bmi/:candidate_id', async (req, res) => {
     res.status(500).json({ error: 'Server error' });
   }
 });
+
+
 
 
 
@@ -148,6 +151,39 @@ router.get("/all", async (req, res) => {
 });
 
 
+
+// Generate QR code for a candidate
+router.get('/generateQR', async (req, res) => {
+  try {
+    const { workerId, candidateId } = req.query;
+    
+    if (!workerId || !candidateId) {
+      return res.status(400).send('Missing workerId or candidateId');
+    }
+
+    const url = `https://anganwadibackend.onrender.com/view-student/${workerId}/${candidateId}`;
+    const qrCodeImage = await QRCode.toDataURL(url);
+
+    res.set('Content-Type', 'image/png');
+    res.send(Buffer.from(qrCodeImage.split(',')[1], 'base64'));
+  } catch (err) {
+    console.error('Error generating QR code:', err);
+    res.status(500).send('Internal Server Error');
+  }
+});
+
+
+//get single candidate by id
+router.get('/:id', async (req, res) => {
+  const candidateId = req.params.id;
+  try {
+    const { rows } = await pool.query('SELECT * FROM candidates WHERE id = $1', [candidateId]);
+    res.json(rows[0]);
+  } catch (err) {
+    console.error('❌ Error fetching candidate:', err);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
 
 
 
