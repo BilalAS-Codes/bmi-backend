@@ -15,6 +15,7 @@ const jwt = require('jsonwebtoken');
 const cors = require('cors');
 const {rescheduleCronJobs} = require('./routes/reschedule_crone_jobs');  
 const anganwadiRouter = require('./routes/angawadi_workers')
+const adminRouter = require('./routes/admins'); 
 
 dotenv.config();
 
@@ -63,6 +64,7 @@ app.use('/', viewRoutes);
 
 app.use('/task' , taskRoutes);
 app.use('/cron', cronRouter);
+app.use('/admin', adminRouter);
 
 app.get('/', (_req, res) => res.send('Anganwadi backend is running'));
 
