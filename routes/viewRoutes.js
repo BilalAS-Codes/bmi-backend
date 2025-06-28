@@ -63,6 +63,7 @@ router.get('/view-student/:workerId/:candidateId', async (req, res) => {
     `;
 
     const result = await pool.query(query, [workerId, candidateId]);
+    console.log('result.rows:', result.rows);
 
     if (result.rows.length === 0) {
       return res
