@@ -92,7 +92,7 @@ router.post('/register', async (req, res) => {
 
 //for aganwadi workers
 router.post('/login', async (req, res) => {
-  const { email, password } = req.body;
+  const { email, password , fcm_token} = req.body;
 
   if (!email || !password ) {
     return res.status(400).json({ error: 'Email, password are required' });
@@ -123,12 +123,20 @@ router.post('/login', async (req, res) => {
       return res.status(401).json({ error: 'Invalid password' });
     }
 
-    console.log(admin);
-
+    // Update FCM token if provided
+    if (fcm_token) {
+      const updateFcmQuery = `
+        UPDATE anganwadi_workers
+        SET fcm_token = $1
+        WHERE id = $2
+      `;
+      await pool.query(updateFcmQuery, [fcm_token, admin.id]);
+    }
+    
     // Step 4: Send OTP via Twilio
-    const verification = await client.verify.v2.services(
-      process.env.TWILIO_VERIFY_SERVICE_SID
-    ).verifications.create({ to: admin.phone, channel: 'sms' });
+    // const verification = await client.verify.v2.services(
+    //   process.env.TWILIO_VERIFY_SERVICE_SID
+    // ).verifications.create({ to: admin.phone, channel: 'sms' });
 
     res.json({ message: 'OTP sent successfully', phone: admin.phone} );
 

@@ -17,6 +17,7 @@ const {rescheduleCronJobs} = require('./routes/reschedule_crone_jobs');
 const anganwadiRouter = require('./routes/angawadi_workers')
 const adminRouter = require('./routes/admins'); 
 const notificationRouter = require('./routes/notifications');
+const sendNotification = require('./routes/send_notification'); 
 
 dotenv.config();
 
@@ -46,8 +47,6 @@ app.use(cors())
 // };
 
 
-
-
 app.set('view engine', 'ejs');
 app.set('views', './views');
 const PORT = 5000
@@ -60,6 +59,7 @@ app.use('/candidates', candidateRoutes);
 app.use('/anganwadi-workers',anganwadiRouter); 
 app.use('/seed',seedUsers)
 app.use('/notifications',notificationRouter);
+app.use('/send-notification', sendNotification); 
 
 app.use('/', viewRoutes);
 // app.use('/api', seedCandidatesRoute);
@@ -77,100 +77,100 @@ app.get('/test', (req, res) => {
 
 
 
-// app.post('/api/notifications', async (req, res) => {
-//   const { title, message, workerIds } = req.body;
-//   const client = await pool.connect();
+  // app.post('/api/notifications', async (req, res) => {
+  //   const { title, message, workerIds } = req.body;
+  //   const client = await pool.connect();
 
-//   try {
-//     await client.query('BEGIN');
+  //   try {
+  //     await client.query('BEGIN');
 
-//     const notificationRes = await client.query(
-//       `INSERT INTO notifications (title, message, created_by)
-//        VALUES ($1, $2, $3) RETURNING id`,
-//       [title, message, req.user.id] // assuming JWT middleware sets req.user
-//     );
+  //     const notificationRes = await client.query(
+  //       `INSERT INTO notifications (title, message, created_by)
+  //        VALUES ($1, $2, $3) RETURNING id`,
+  //       [title, message, req.user.id] // assuming JWT middleware sets req.user
+  //     );
 
-//     const notificationId = notificationRes.rows[0].id;
+  //     const notificationId = notificationRes.rows[0].id;
 
-//     for (const workerId of workerIds) {
-//       await client.query(
-//         `INSERT INTO notification_recipients (notification_id, worker_id)
-//          VALUES ($1, $2)`,
-//         [notificationId, workerId]
-//       );
-//     }
+  //     for (const workerId of workerIds) {
+  //       await client.query(
+  //         `INSERT INTO notification_recipients (notification_id, worker_id)
+  //          VALUES ($1, $2)`,
+  //         [notificationId, workerId]
+  //       );
+  //     }
 
-//     // Get FCM tokens
-//     const tokenRes = await client.query(
-//       `SELECT fcm_token FROM workers WHERE id = ANY($1::int[])`,
-//       [workerIds]
-//     );
+  //     // Get FCM tokens
+  //     const tokenRes = await client.query(
+  //       `SELECT fcm_token FROM workers WHERE id = ANY($1::int[])`,
+  //       [workerIds]
+  //     );
 
-//     const tokens = tokenRes.rows.map(row => row.fcm_token).filter(Boolean);
+  //     const tokens = tokenRes.rows.map(row => row.fcm_token).filter(Boolean);
 
-//     await sendPushNotification(tokens, title, message);
+  //     await sendPushNotification(tokens, title, message);
 
-//     await client.query('COMMIT');
-//     res.status(200).json({ success: true });
-//   } catch (err) {
-//     await client.query('ROLLBACK');
-//     console.error(err);
-//     res.status(500).json({ error: 'Internal server error' });
-//   } finally {
-//     client.release();
-//   }
-// });
-
-
+  //     await client.query('COMMIT');
+  //     res.status(200).json({ success: true });
+  //   } catch (err) {
+  //     await client.query('ROLLBACK');
+  //     console.error(err);
+  //     res.status(500).json({ error: 'Internal server error' });
+  //   } finally {
+  //     client.release();
+  //   }
+  // });
 
 
 
-// Initialize Firebase Admin if not already done
-// if (!admin.apps.length) {
-//   admin.initializeApp({
-//     credential: admin.credential.cert(require('./firebase-adminsdk.json')),
-//   });
-// }
 
-// /**
-//  * @api {post} /api/test-notification Send test notification to single device
-//  * @apiName SendTestNotification
-//  * @apiGroup Notification
-//  * 
-//  * @apiBody {String} token The device FCM token
-//  * @apiBody {String} title Notification title
-//  * @apiBody {String} message Notification message
-//  * 
-//  * @apiSuccess {Boolean} success True if notification was sent successfully
-//  * @apiError (500) {String} error Error message
-//  */
-// app.post('/api/test-notification', async (req, res) => {
-//   try {
-//     const { token, title, message } = req.body;
-//     console.log('Received test notification request:', { token, title, message });
 
-//     if (!token || !title || !message) {
-//       return res.status(400).json({ error: 'Token, title and message are required' });
-//     }
+  // Initialize Firebase Admin if not already done
+  // if (!admin.apps.length) {
+  //   admin.initializeApp({
+  //     credential: admin.credential.cert(require('./firebase-adminsdk.json')),
+  //   });
+  // }
 
-//     const payload = {
-//       notification: {
-//         title,
-//         body: message,
-//       },
-//       token: token 
-//     };
+  // /**
+  //  * @api {post} /api/test-notification Send test notification to single device
+  //  * @apiName SendTestNotification
+  //  * @apiGroup Notification
+  //  * 
+  //  * @apiBody {String} token The device FCM token
+  //  * @apiBody {String} title Notification title
+  //  * @apiBody {String} message Notification message
+  //  * 
+  //  * @apiSuccess {Boolean} success True if notification was sent successfully
+  //  * @apiError (500) {String} error Error message
+  //  */
+  // app.post('/api/test-notification', async (req, res) => {
+  //   try {
+  //     const { token, title, message } = req.body;
+  //     console.log('Received test notification request:', { token, title, message });
 
-//     // Send the notification
-//     const response = await admin.messaging().send(payload);
-    
-//     console.log('Successfully sent test notification:', response);
-//     res.status(200).json({ success: true, messageId: response });
-//   } catch (err) {
-//     console.error('Error sending test notification:', err);
-//     res.status(500).json({ error: err.message || 'Failed to send notification' });
-//   }
-// });
+  //     if (!token || !title || !message) {
+  //       return res.status(400).json({ error: 'Token, title and message are required' });
+  //     }
+
+  //     const payload = {
+  //       notification: {
+  //         title,
+  //         body: message,
+  //       },
+  //       token: token 
+  //     };
+
+  //     // Send the notification
+  //     const response = await admin.messaging().send(payload);
+      
+  //     console.log('Successfully sent test notification:', response);
+  //     res.status(200).json({ success: true, messageId: response });
+  //   } catch (err) {
+  //     console.error('Error sending test notification:', err);
+  //     res.status(500).json({ error: err.message || 'Failed to send notification' });
+  //   }
+  // });
 
 
 
@@ -212,6 +212,13 @@ app.post('/api/login', async (req, res) => {
     res.status(500).json({ error: 'Internal Server Error' });
   }
 });
+
+
+
+
+
+
+
 
 
 
