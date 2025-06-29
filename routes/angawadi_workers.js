@@ -134,9 +134,9 @@ router.post('/login', async (req, res) => {
     }
     
     // Step 4: Send OTP via Twilio
-    // const verification = await client.verify.v2.services(
-    //   process.env.TWILIO_VERIFY_SERVICE_SID
-    // ).verifications.create({ to: admin.phone, channel: 'sms' });
+    const verification = await client.verify.v2.services(
+      process.env.TWILIO_VERIFY_SERVICE_SID
+    ).verifications.create({ to: admin.phone, channel: 'sms' });
 
     res.json({ message: 'OTP sent successfully', phone: admin.phone} );
 
