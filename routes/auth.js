@@ -10,23 +10,23 @@ const { findByEmail, createWorker } = require('../models/worker');
 
 const router = express.Router();
 
-router.post('/login', async (req, res) => {
-  const { email, password } = req.body;
+// router.post('/login', async (req, res) => {
+//   const { email, password } = req.body;
 
-  console.log(req.body)
-  if (!email || !password) return res.status(400).json({ error: 'missing' });
+//   console.log(req.body)
+//   if (!email || !password) return res.status(400).json({ error: 'missing' });
 
-  const worker = await findByEmail(email);
-  if (!worker) return res.status(401).json({ error: 'bad creds' });
+//   const worker = await findByEmail(email);
+//   if (!worker) return res.status(401).json({ error: 'bad creds' });
 
-  const token = jwt.sign(
-    { id: worker.id, email: worker.email },
-    process.env.JWT_SECRECT,
-    { expiresIn: '12h' }
-  );
+//   const token = jwt.sign(
+//     { id: worker.id, email: worker.email },
+//     process.env.JWT_SECRECT,
+//     { expiresIn: '12h' }
+//   );
 
-  res.json({ token, user: { id: worker.id, email: worker.email, full_name: worker.full_name } });
-});
+//   res.json({ token, user: { id: worker.id, email: worker.email, full_name: worker.full_name } });
+// });
 
 router.post('/register', async (req, res) => {
   const { email, password, full_name, phone } = req.body;

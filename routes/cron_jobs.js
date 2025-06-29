@@ -15,9 +15,8 @@ const parseDate = (dateStr) => {
 // Create a new cron job
 router.post('/add', async (req, res) => {
   const { name, date, time, repeat_interval } = req.body;
-  console.log('Received data:', req.body);
   const parsedDate = parseDate(date);
-  console.log('Parsed date:', parsedDate);
+  
 
   try {
     // Extract hour and minute from the time string
@@ -31,7 +30,6 @@ router.post('/add', async (req, res) => {
         break;
       case 'weekly':
         const jsDate = new Date(parsedDate); // assuming date is in YYYY-MM-DD
-
         console.log('Parsed date:', jsDate);
         const dayOfWeek = jsDate.getDay();
         console.log('Day of the week:', dayOfWeek); 
@@ -48,11 +46,12 @@ router.post('/add', async (req, res) => {
     let target_url ;
     switch (name) {
       case 'sync-users':
-        target_url = 'http://localhost:5000/seed/sync-users';
+        target_url = 'https://anganwadibackend.onrender.com/seed/sync-users';
         break;
       case 'sync-candidates':
-        target_url = 'http://localhost:5000/seed/sync-candidates';
+        target_url = 'https://anganwadibackend.onrender.com/seed/sync-candidates';
         break;
+      
       default:
         return res.status(400).json({ error: 'Invalid job name' });
     }
@@ -95,6 +94,31 @@ router.post('/add', async (req, res) => {
 });
 
 
+router.delete('/delete/:id', async(req , res)=>{
+  const jobId = req.params.id;
+  try {
+    const result = await pool.query('DELETE FROM cron_jobs WHERE id = $1 RETURNING *', [jobId]);
+    if (result.rowCount === 0) {
+      return res.status(404).json({ error: 'Job not found' });
+    }
+    
+    // Cancel the cron job if it exists
+
+    console.log()
+    const job = cron.getTasks().find(task => task.name === result.rows[0].name);
+    if (job) {
+      job.stop();
+      console.log(`Stopped cron job: ${result.rows[0].name}`);
+    }
+
+    res.json({ message: 'Job deleted successfully', job: result.rows[0] });
+  } catch (error) {
+    console.error('Error deleting job:', error.message);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+})
+
+
 // Get all cron jobs
 router.get('/getall', async (req, res) => {
   try {
@@ -105,7 +129,7 @@ router.get('/getall', async (req, res) => {
   }
 });
 
-// (Optional) Get job by ID
+//  Get job by ID
 router.get('/:id', async (req, res) => {
   try {
     const result = await pool.query('SELECT * FROM cron_jobs WHERE id = $1', [req.params.id]);

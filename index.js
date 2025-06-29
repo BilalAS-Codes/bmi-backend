@@ -16,6 +16,7 @@ const cors = require('cors');
 const {rescheduleCronJobs} = require('./routes/reschedule_crone_jobs');  
 const anganwadiRouter = require('./routes/angawadi_workers')
 const adminRouter = require('./routes/admins'); 
+const notificationRouter = require('./routes/notifications');
 
 dotenv.config();
 
@@ -45,19 +46,20 @@ app.use(cors())
 // };
 
 
+
+
 app.set('view engine', 'ejs');
-// Specify the directory where your EJS template files are located
 app.set('views', './views');
 const PORT = 5000
 
 
 
-// createTables()
+
 app.use('/auth', authRoutes);
 app.use('/candidates', candidateRoutes);
 app.use('/anganwadi-workers',anganwadiRouter); 
 app.use('/seed',seedUsers)
-
+app.use('/notifications',notificationRouter);
 
 app.use('/', viewRoutes);
 // app.use('/api', seedCandidatesRoute);
@@ -72,27 +74,6 @@ app.get('/', (_req, res) => res.send('Anganwadi backend is running'));
 app.get('/test', (req, res) => {
   res.json({ message: 'Backend is working' });
 });
-
-
-
-// app.post('/test-register', async(req,res)=>{
-// try {
-//   const {email , password , full_name , phone } = req.body;
-//   if (!email || !password || !full_name || !phone) {
-//     return res.status(400).json({ error: 'All fields are required' });
-//   }
-//   const hashedPassword = await bcrypt.hash(password, 10);
-//   const query = 'INSERT INTO workers (email, password, full_name, phone) VALUES ($1, $2, $3, $4) RETURNING *';
-//   const values = [email, hashedPassword, full_name, phone];
-//   const { rows } = await pool.query(query, values);
-//   const newWorker = rows[0];
-//   res.status(201).json({ worker: newWorker });
-// } catch (error) {
-//   console.error('Error in /test-register:', error);
-//   res.status(500).json({ error: 'Internal Server Error' });
-// }
-// }
-// );
 
 
 

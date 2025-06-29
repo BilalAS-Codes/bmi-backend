@@ -145,6 +145,8 @@ router.get("/get/:id", async (req, res) => {
 
 // UPDATE a task
 router.put("/update/:id", async (req, res) => {
+  
+    console.log(req.body); 
   const {
     category,
     health_status,
@@ -156,6 +158,8 @@ router.put("/update/:id", async (req, res) => {
     day_from,
     day_to
   } = req.body;
+
+  console.log(req.params.id);
 
   try {
     const formattedDayFrom = day_from ? parseDate(day_from) : null;

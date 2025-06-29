@@ -106,55 +106,64 @@ router.post('/register', async (req, res) => {
 
 const accountSid = process.env.TWILIO_ACCOUNT_SID;
 const authToken = process.env.TWILIO_AUTH_TOKEN;
-console.log('twillo' , process.env.TWILIO_PHONE_NUMBER)
-
-console.log('Twilio service SID:',process.env.TWILIO_VERIFY_SERVICE_SID);
 
 
 // Send OTP using Twilio Verify
-router.post('/send-otp', async (req, res) => {
-  const { phone } = req.body;
+router.post('/login', async (req, res) => {
+  const { email, password } = req.body;
 
-  if (!phone) {
-    return res.status(400).json({ error: 'Phone number is required' });
+  if (!email || !password ) {
+    return res.status(400).json({ error: 'Email, password are required' });
   }
 
   try {
-    // Check if admin exists
-    const adminCheck = await pool.query(
-      'SELECT id FROM admins WHERE phone = $1', 
-      [phone]
-    );
+    // Find admin by email
+    const result = await pool.query('SELECT * FROM anganwadi_workers WHERE email = $1', [email]);
 
-    if (adminCheck.rows.length === 0) {
-      return res.status(404).json({ error: 'No admin registered with this phone number' });
+    console.log(result.rows);
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'No admin registered with this email' });
     }
 
-    // Send OTP via Twilio Verify
+    const admin = result.rows[0];
+
+    // Step 2: Check role
+    if (admin.role !== 'Admin') {
+      return res.status(403).json({ error: 'Unauthorized: Not an admin' });
+    }
+
+    // Step 3: Verify password
+    // const validPassword = await bcrypt.compare(password, admin.password_hash);
+
+    const validPassword = admin.password_hash == password; 
+
+    if (!validPassword) {
+      return res.status(401).json({ error: 'Invalid password' });
+    }
+
+
+    // Step 4: Send OTP via Twilio
     const verification = await client.verify.v2.services(
       process.env.TWILIO_VERIFY_SERVICE_SID
-    )
-    .verifications
-    .create({ to: phone, channel: 'sms' });
+    ).verifications.create({ to: admin.phone, channel: 'sms' });
 
-    res.json({ 
-      message: 'OTP sent successfully'
-    });
+    res.json({ message: 'OTP sent successfully', phone : admin.phone });
 
   } catch (err) {
-    console.error('Twilio Verify Error:', err);
-    
-    // Handle specific Twilio errors
+    console.error('OTP Error:', err);
+
     if (err.code === 60200) {
       return res.status(400).json({ error: 'Invalid phone number format' });
     }
     if (err.code === 60203) {
       return res.status(429).json({ error: 'Max verification attempts reached' });
     }
-    
+
     res.status(500).json({ error: 'Failed to send OTP' });
   }
 });
+
 
 
 
@@ -181,7 +190,7 @@ router.post('/verify-otp', async (req, res) => {
 
     //  Get admin details (only if OTP is valid)
     const adminResult = await pool.query(
-      `SELECT id, phone, email FROM admins WHERE phone = $1`,
+      `SELECT id, phone, email FROM anganwadi_workers WHERE phone = $1`,
       [phone]
     );
 
@@ -197,9 +206,9 @@ router.post('/verify-otp', async (req, res) => {
         id: admin.id,
         phone: admin.phone,
         email: admin.email,
-        role: 'admin' // Optional: Add role for authorization
+        role: admin.role // Optional: Add role for authorization
       },
-      process.env.JWT_SECRECT, // Fixed typo: JWT_SECRECT → JWT_SECRET
+      process.env.JWT_SECRECT,
       { expiresIn: '7d' }
     );
 
