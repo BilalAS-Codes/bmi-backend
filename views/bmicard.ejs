@@ -6,11 +6,11 @@
   <title>BMI Card</title>
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body class="bg-gradient-to-b from-indigo-100 to-white flex justify-center items-center min-h-screen">
-  <div class="max-w-sm w-full bg-white rounded-3xl shadow-xl overflow-hidden">
+<body class="bg-gradient-to-b from-indigo-100 to-white flex justify-center items-center min-h-screen px-4">
+  <div class="max-w-sm w-full bg-white rounded-3xl shadow-xl overflow-hidden mx-auto">
     <div class="bg-gradient-to-r from-indigo-500 to-purple-500 p-6 text-white text-center">
       <div class="w-24 h-24 mx-auto bg-white rounded-full flex items-center justify-center">
-        <img src="<%= student.image_url || 'https://via.placeholder.com/100' %>" alt="Profile" class="rounded-full w-20 h-20 object-cover">
+        <img src="<%= 'https://cdn-icons-png.flaticon.com/512/1864/1864593.png' %>" alt="Profile" class="rounded-full w-20 h-20 object-cover">
       </div>
       <h2 class="text-xl font-bold mt-3"><%= student.name %></h2>
       <p class="text-sm opacity-80">S/o : <%= student.fathername %></p>
