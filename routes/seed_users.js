@@ -153,5 +153,132 @@ router.post('/sync-candidates', async (req, res) => {
 });
 
 
+router.post('/syncbmi', async (req, res) => {
+  try {
+    // Step 1: Fetch unsynced BMI data
+    const bmiData = await pool.query(`
+      SELECT 
+        id,
+        candidate_id as "candidateid",
+        height,
+        weight,
+        bmi,
+        health_status,
+        image as "image",
+        created_at as "date_time"
+      FROM candidate_bmi
+      WHERE sync_status IS NULL OR sync_status = 'failed'
+      ORDER BY created_at DESC
+      LIMIT 100
+    `);
+
+    if (bmiData.rows.length === 0) {
+      return res.status(200).json({
+        success: true,
+        message: 'No BMI records to sync',
+        synced_count: 0
+      });
+    }
+
+    let successCount = 0;
+    const results = [];
+
+    // Step 2: Process each record
+    for (const record of bmiData.rows) {
+      try {
+        // Prepare payload (using image_url directly as it's already base64)
+        const payload = {
+          candidateid: record.candidateid,
+          height: record.height,
+          weight: record.weight,
+          image: record.image, // Directly use the base64 image_url
+          bmi: record.bmi,
+          health_status: record.health_status.toLowerCase(),
+          date_time: new Date(record.date_time).toISOString()
+        };
+
+        // Step 3: Send to external API
+        const response = await axios.post(
+          'https://ai-height-estimate.onrender.com/submit-health',
+          payload,
+          {
+            headers: {
+              'Content-Type': 'application/json',
+              // Add any required authentication headers here
+              // 'Authorization': `Bearer ${process.env.API_KEY}`
+            },
+            timeout: 10000 // 10 second timeout
+          }
+        );
+
+        // Validate response
+        if (response.data && response.data.message === "Health data submitted successfully") {
+          await pool.query(`
+            UPDATE candidate_bmi
+            SET sync_status = 'synced',
+                last_sync_at = NOW(),
+                sync_response = $1,
+                sync_attempts = COALESCE(sync_attempts, 0) + 1
+            WHERE id = $2
+          `, [JSON.stringify(response.data), record.id]);
+
+          successCount++;
+          results.push({
+            candidate_id: record.candidateid,
+            bmi_record_id: record.id,
+            status: 'success'
+          });
+        } else {
+          throw new Error('Unexpected response format');
+        }
+
+      } catch (error) {
+        console.error(`Failed to sync record ${record.id}:`, error.message);
+        
+        await pool.query(`
+          UPDATE candidate_bmi
+          SET sync_status = 'failed',
+              last_sync_error = $1,
+              last_sync_at = NOW(),
+              sync_attempts = COALESCE(sync_attempts, 0) + 1
+          WHERE id = $2
+        `, [
+          error.response?.data?.message || error.message, 
+          record.id
+        ]);
+
+        results.push({
+          candidate_id: record.candidateid,
+          bmi_record_id: record.id,
+          status: 'failed',
+          error: error.response?.data || error.message
+        });
+      }
+    }
+
+    res.status(200).json({
+      success: true,
+      message: `Sync completed: ${successCount} successful, ${bmiData.rows.length - successCount} failed`,
+      total_attempted: bmiData.rows.length,
+      successful_syncs: successCount,
+      failed_syncs: bmiData.rows.length - successCount,
+      details: results
+    });
+
+  } catch (error) {
+    console.error('Error in /syncbmi:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Internal server error during sync',
+      details: process.env.NODE_ENV === 'development' ? {
+        message: error.message,
+        stack: error.stack
+      } : undefined
+    });
+  }
+});
+
+
+
 
 module.exports = router;

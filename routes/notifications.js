@@ -30,7 +30,6 @@ router.post('/add', async (req, res) => {
 });
 
 
-
 // Get All Notifications
 router.get('/get', async (req, res) => {
   try {

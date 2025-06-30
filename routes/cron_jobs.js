@@ -51,8 +51,11 @@ router.post('/add', async (req, res) => {
       case 'sync-candidates':
         target_url = 'https://anganwadibackend.onrender.com/seed/sync-candidates';
         break;
+      case 'send-notification':
+        target_url = 'https://anganwadibackend.onrender.com/send-notification/send-to-all';
+        break;
       
-      default:
+      default:  
         return res.status(400).json({ error: 'Invalid job name' });
     }
     const result = await pool.query(
