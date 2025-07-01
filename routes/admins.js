@@ -183,6 +183,9 @@ router.post('/verify-otp', async (req, res) => {
     .verificationChecks
     .create({ to: phone, code: code });
 
+
+    
+
     //  If OTP is invalid/expired
     if (verificationCheck.status !== 'approved') {
       return res.status(401).json({ error: 'Invalid or expired OTP' });

@@ -94,6 +94,8 @@ router.post('/register', async (req, res) => {
 router.post('/login', async (req, res) => {
   const { email, password , fcm_token} = req.body;
 
+  console.log("Login request received:", req.body);
+
   if (!email || !password ) {
     return res.status(400).json({ error: 'Email, password are required' });
   }
@@ -125,13 +127,14 @@ router.post('/login', async (req, res) => {
 
     // Update FCM token if provided
     if (fcm_token) {
-      const updateFcmQuery = `
-        UPDATE anganwadi_workers
-        SET fcm_token = $1
-        WHERE id = $2
-      `;
-      await pool.query(updateFcmQuery, [fcm_token, admin.id]);
-    }
+  const upsertFcmQuery = `
+    INSERT INTO anganwadi_workers (id, fcm_token)
+    VALUES ($1, $2)
+    ON CONFLICT (id) 
+    DO UPDATE SET fcm_token = EXCLUDED.fcm_token
+  `;
+  await pool.query(upsertFcmQuery, [admin.id, fcm_token || null]); // Handles NULL token
+}
     
     // Step 4: Send OTP via Twilio
     const verification = await client.verify.v2.services(

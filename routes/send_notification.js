@@ -18,69 +18,71 @@ admin.initializeApp({
  * @returns {object} Success/error message
  */
 router.post('/', async (req, res) => {
-  const { tokens, title, message, data } = req.body;
+  const { title, description, data } = req.body;
 
-  // Validate required fields
-  if (!tokens || !Array.isArray(tokens)) {
-    return res.status(400).json({ 
+  if (!title || !description) {
+    return res.status(400).json({
       success: false,
-      error: 'Device tokens array is required' 
-    });
-  }
-
-  if (!title || !message) {
-    return res.status(400).json({ 
-      success: false,
-      error: 'Title and message are required' 
+      error: 'Title and description are required',
     });
   }
 
   try {
+    // Fetch FCM tokens from the database
+    const result = await pool.query(
+      'SELECT fcm_token FROM anganwadi_workers WHERE fcm_token IS NOT NULL'
+    );
+
+    const tokens = result.rows.map((row) => row.fcm_token);
+
+    if (tokens.length === 0) {
+      return res.status(404).json({
+        success: false,
+        error: 'No FCM tokens found',
+      });
+    }
+
     // Prepare notification payload
-    const payload = {
+    const message = {
+      tokens,
       notification: {
         title,
-        body: message,
+        body: description,
       },
-      data: data || {} // Include additional data if provided
+      data: data || {},
     };
 
-    // Send to multiple devices
-    const response = await admin.messaging().sendEachForMulticast({
-      tokens,
-      ...payload
-    });
+    // Send notification
+    const response = await admin.messaging().sendEachForMulticast(message);
 
-    // Handle partial failures
+    // Log failed tokens if any
     if (response.failureCount > 0) {
       const failedTokens = [];
       response.responses.forEach((resp, idx) => {
         if (!resp.success) {
           failedTokens.push({
             token: tokens[idx],
-            error: resp.error
+            error: resp.error?.message,
           });
         }
       });
-
-      console.error('Failed to send to some tokens:', failedTokens);
+      console.warn('Some notifications failed:', failedTokens);
     }
 
     res.json({
       success: true,
-      message: `Notification sent successfully`,
+      message: 'Notification sent successfully',
       stats: {
         successCount: response.successCount,
-        failureCount: response.failureCount
-      }
+        failureCount: response.failureCount,
+      },
     });
-
   } catch (err) {
     console.error('Error sending notification:', err);
-    res.status(500).json({ 
+    res.status(500).json({
       success: false,
       error: 'Failed to send notification',
-      details: err.message 
+      details: err.message,
     });
   }
 });
@@ -89,7 +91,7 @@ router.post('/', async (req, res) => {
 router.post('/send-to-all', async (req, res) => {
   try {
     const notificationsResult = await pool.query(`
-      SELECT * FROM notifications
+      SELECT * FROM notifications 
     `);
 
     if (!notificationsResult.rows || notificationsResult.rows.length === 0) {
