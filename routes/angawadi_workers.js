@@ -128,10 +128,9 @@ router.post('/login', async (req, res) => {
     // Update FCM token if provided
     if (fcm_token) {
   const upsertFcmQuery = `
-    INSERT INTO anganwadi_workers (id, fcm_token)
-    VALUES ($1, $2)
-    ON CONFLICT (id) 
-    DO UPDATE SET fcm_token = EXCLUDED.fcm_token
+    UPDATE anganwadi_workers
+        SET fcm_token = $2
+        WHERE id = $1
   `;
   await pool.query(upsertFcmQuery, [admin.id, fcm_token || null]); // Handles NULL token
 }
