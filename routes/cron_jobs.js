@@ -46,13 +46,13 @@ router.post('/add', async (req, res) => {
     let target_url ;
     switch (name) {
       case 'sync-users':
-        target_url = 'https://anganwadibackend.onrender.com/seed/sync-users';
+        target_url = 'http://13.204.68.9:5000/seed/sync-users';
         break;
       case 'sync-candidates':
-        target_url = 'https://anganwadibackend.onrender.com/seed/sync-candidates';
+        target_url = 'http://13.204.68.9:5000/seed/sync-candidates';
         break;
       case 'send-notification':
-        target_url = 'https://anganwadibackend.onrender.com/send-notification/send-to-all';
+        target_url = 'http://13.204.68.9:5000/send-notification/send-to-all';
         break;
       
       default:  
