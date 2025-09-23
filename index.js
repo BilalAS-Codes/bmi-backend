@@ -18,13 +18,14 @@ const anganwadiRouter = require('./routes/angawadi_workers')
 const adminRouter = require('./routes/admins'); 
 const notificationRouter = require('./routes/notifications');
 const sendNotification = require('./routes/send_notification'); 
+const loggingService = require('./routes/loggingService');
 
 dotenv.config();
 
 
 
 const app = express();
-app.use(express.json());
+app.use(express.json({limit: '50mb'}));
 app.use(cors())
 
 // const admin = require('firebase-admin');
@@ -212,6 +213,8 @@ app.post('/api/login', async (req, res) => {
     res.status(500).json({ error: 'Internal Server Error' });
   }
 });
+
+app.use('/log',loggingService);
 
 
 

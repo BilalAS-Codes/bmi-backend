@@ -24,10 +24,20 @@ router.get('/worker/:id', async (req, res) => {
 //get bmi of particular candidate
 router.get('/bmi/:candidate_id', async (req, res) => {
   try {
-    const { rows } = await pool.query('SELECT * FROM candidate_bmi WHERE candidate_id = $1 ORDER BY created_at DESC', [req.params.candidate_id]);
+    const candidateId = req.params.candidate_id;
+
+    if (!candidateId) {
+      return res.status(400).json({ error: 'Candidate ID is required' });
+    }
+
+    const { rows } = await pool.query(
+      'SELECT * FROM candidate_bmi WHERE candidate_id = $1 ORDER BY created_at DESC',
+      [candidateId]
+    );
+
     res.json(rows);
   } catch (err) {
-    console.error('❌ Error fetching candidate BMI:', err);
+    console.error('Error fetching candidate BMI:', err);
     res.status(500).json({ error: 'Server error' });
   }
 });
