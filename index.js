@@ -117,6 +117,6 @@ app.use('/log',loggingService);
 
 
 connectDB().then(() => {
-  rescheduleCronJobs(); 
+  // rescheduleCronJobs(); 
   app.listen(PORT, '0.0.0.0',() => console.log(`🚀 Server running on http://localhost:${PORT}`));
 });
